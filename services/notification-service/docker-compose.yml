@@ -1,0 +1,70 @@
+﻿version: "3.8"
+
+services:
+  consul:
+    image: hashicorp/consul:1.20.3
+    container_name: consul
+    command: "consul agent -dev -client=0.0.0.0 -ui"
+    ports:
+      - "8500:8500"
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  notification-service:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=terraventures_notifications
+      - DB_USER=root
+      - DB_PASSWORD=root123
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_EXCHANGE=notifications_exchange
+      - JWT_SECRET=my_super_secret_key_12345
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - db
+      - rabbitmq
+      - consul
+    networks:
+      - microservices-net
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: terraventures_notifications
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - microservices-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  mysql_data:

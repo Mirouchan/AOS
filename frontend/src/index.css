@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer components {
+  .nav-link {
+    @apply text-light-text dark:text-dark-text font-medium relative cursor-pointer;
+  }
+
+  .nav-link::after {
+    content: "";
+    @apply absolute left-0 -bottom-1 w-0 h-[2px] bg-light-primary dark:bg-dark-primary transition-all duration-300;
+  }
+
+  .nav-link:hover::after {
+    @apply w-full;
+  }
+}
+
+/* ===== Custom Scrollbar ===== */
+
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* light gray */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode */
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

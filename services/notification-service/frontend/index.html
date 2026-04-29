@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notification Service - TerraVentures</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #0f172a;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 900px;
+        width: 100%;
+        margin: auto;
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .header {
+        background-color: #facc15;
+        padding: 25px 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        color: #0f172a;
+        font-size: 28px;
+        margin: 0;
+      }
+
+      .header p {
+        color: #0f172a;
+        opacity: 0.8;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .login-box {
+        text-align: center;
+        padding: 20px;
+      }
+
+      .login-box h2 {
+        color: #0f172a;
+        margin-bottom: 20px;
+      }
+
+      input {
+        width: 100%;
+        max-width: 300px;
+        padding: 12px 15px;
+        margin: 8px 0;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 14px;
+        outline: none;
+        transition: all 0.3s;
+      }
+
+      input:focus {
+        border-color: #facc15;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2);
+      }
+
+      button {
+        background-color: #facc15;
+        color: #0f172a;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin: 5px;
+      }
+
+      button:hover {
+        background-color: #e5b800;
+        transform: translateY(-2px);
+      }
+
+      .btn-danger {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #c82333;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .section-header h2 {
+        color: #0f172a;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 10px;
+      }
+
+      .notification {
+        background: #f8fafc;
+        border-left: 4px solid #facc15;
+        padding: 15px 20px;
+        margin: 15px 0;
+        border-radius: 12px;
+        transition: all 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .notification:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .notification.unread {
+        background: #fefce8;
+        border-left-color: #facc15;
+      }
+
+      .notification.read {
+        background: #f1f5f9;
+        border-left-color: #94a3b8;
+        opacity: 0.8;
+      }
+
+      .notification-info {
+        flex: 1;
+      }
+
+      .notification-content {
+        font-size: 16px;
+        color: #0f172a;
+        margin-bottom: 8px;
+      }
+
+      .notification-date {
+        font-size: 12px;
+        color: #64748b;
+      }
+
+      .notification-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .notification-actions button {
+        padding: 6px 15px;
+        font-size: 12px;
+        margin: 0;
+      }
+
+      .badge-read {
+        background-color: #22c55e;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        display: inline-block;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #64748b;
+      }
+
+      .footer {
+        background-color: #0f172a;
+        color: #94a3b8;
+        text-align: center;
+        padding: 15px;
+        font-size: 12px;
+      }
+
+      .footer a {
+        color: #facc15;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏔️ TerraVentures</h1>
+        <p>Centre de notifications</p>
+      </div>
+
+      <div class="content">
+        <div id="login-section">
+          <div class="login-box">
+            <h2>🔐 Connexion</h2>
+            <input
+              type="text"
+              id="username"
+              placeholder="Nom d'utilisateur"
+              value="testuser"
+            />
+            <br />
+            <input
+              type="password"
+              id="password"
+              placeholder="Mot de passe"
+              value="test123"
+            />
+            <br />
+            <button onclick="login()">Se connecter</button>
+          </div>
+        </div>
+
+        <div id="notifications-section" style="display: none">
+          <div class="section-header">
+            <h2>📬 Mes notifications</h2>
+            <div class="btn-group">
+              <button onclick="loadNotifications()">🔄 Actualiser</button>
+              <button onclick="markAllAsRead()">
+                ✅ Tout marquer comme lu
+              </button>
+            </div>
+          </div>
+          <div id="notifications-list"></div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          © 2026 TerraVentures - Votre aventure commence ici |
+          <a href="#">Support</a>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      let authToken = null;
+
+      async function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+          const response = await fetch(
+            "http://127.0.0.1:8000/api/auth/token/",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, password }),
+            },
+          );
+
+          const data = await response.json();
+          if (response.ok) {
+            authToken = data.access;
+            document.getElementById("login-section").style.display = "none";
+            document.getElementById("notifications-section").style.display =
+              "block";
+            loadNotifications();
+          } else {
+            alert("Erreur: " + JSON.stringify(data));
+          }
+        } catch (error) {
+          alert("Erreur de connexion: " + error);
+        }
+      }
+
+      async function loadNotifications() {
+        try {
+          const response = await fetch(
+            "http://127.0.0.1:8000/api/notifications/me",
+            {
+              headers: { Authorization: `Bearer ${authToken}` },
+            },
+          );
+          const data = await response.json();
+          displayNotifications(data.notifications);
+        } catch (error) {
+          console.error("Erreur:", error);
+          document.getElementById("notifications-list").innerHTML =
+            '<div class="empty-state">❌ Erreur de chargement</div>';
+        }
+      }
+
+      function displayNotifications(notifications) {
+        const container = document.getElementById("notifications-list");
+        if (notifications.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state">📭 Aucune notification</div>';
+          return;
+        }
+
+        container.innerHTML = notifications
+          .map(
+            (notif) => `
+                <div class="notification ${notif.status === "unread" ? "unread" : "read"}">
+                    <div class="notification-info">
+                        <div class="notification-content">${notif.content}</div>
+                        <div class="notification-date">📅 ${new Date(notif.created_at).toLocaleString()}</div>
+                    </div>
+                    <div class="notification-actions">
+                        ${
+                          notif.status === "unread"
+                            ? `<button onclick="markAsRead(${notif.id})">📖 Marquer comme lu</button>`
+                            : `<span class="badge-read">✅ Lu</span>`
+                        }
+                        <button class="btn-danger" onclick="deleteNotification(${notif.id})">🗑️ Supprimer</button>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      async function markAsRead(notificationId) {
+        try {
+          await fetch(
+            `http://127.0.0.1:8000/api/notifications/${notificationId}/read`,
+            {
+              method: "PUT",
+              headers: { Authorization: `Bearer ${authToken}` },
+            },
+          );
+          loadNotifications();
+        } catch (error) {
+          console.error("Erreur:", error);
+        }
+      }
+
+      async function markAllAsRead() {
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/notifications/me/unread",
+          {
+            headers: { Authorization: `Bearer ${authToken}` },
+          },
+        );
+        const data = await response.json();
+
+        for (const notif of data.notifications) {
+          await markAsRead(notif.id);
+        }
+        loadNotifications();
+      }
+
+      async function deleteNotification(notificationId) {
+        if (confirm("Supprimer cette notification ?")) {
+          await fetch(
+            `http://127.0.0.1:8000/api/notifications/${notificationId}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${authToken}` },
+            },
+          );
+          loadNotifications();
+        }
+      }
+    </script>
+  </body>
+</html>

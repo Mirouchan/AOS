@@ -1,0 +1,255 @@
+services:
+  # ========================
+  # 🌐 TRAEFIK - Reverse Proxy
+  # ========================
+  traefik:
+   image: traefik
+   container_name: traefik
+   command:
+    - "--api.insecure=true"
+    - "--providers.docker=true"
+    - "--providers.docker.exposedbydefault=false"
+    - "--entrypoints.web.address=:80"
+   ports:
+    - "80:80"
+    - "8080:8080"
+   volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+   networks:
+    - backend
+   restart: unless-stopped
+   
+
+  # ========================
+  # 🔐 AUTH MIDDLEWARE
+  # ========================
+  auth-middleware:
+    build: ./services/auth-middleware
+    container_name: auth-middleware
+    networks:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-middleware.rule=Host(`auth-middleware.localhost`)"
+      - "traefik.http.services.auth-middleware.loadbalancer.server.port=3000"
+
+  # ========================
+  # 🧠 AUTH DB + SERVICE
+  # ========================
+  auth-db:
+    image: mysql:8
+    container_name: auth-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: auth_db
+    volumes:
+      - auth_db_data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
+      timeout: 10s
+      retries: 10
+      interval: 5s
+
+  auth-service:
+    build: ./services/auth-service
+    container_name: auth-service
+    volumes:
+      - ./services/auth-service:/app
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: auth-db
+      DB_NAME: auth_db
+      DB_USER: root
+      DB_PASSWORD: password
+    entrypoint: /app/entrypoint.sh
+    networks:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=Host(`auth.localhost`)"
+      - "traefik.http.services.auth.loadbalancer.server.port=8000"
+
+  # ========================
+  # 📦 ORDER
+  # ========================
+  order-db:
+    image: mysql:8
+    container_name: order-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: order_db
+    volumes:
+      - order_db_data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      timeout: 10s
+      retries: 10
+      interval: 5s
+
+  order-service:
+    build: ./services/order-service
+    container_name: order-service
+    volumes:
+      - ./services/order-service:/app
+    depends_on:
+      order-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: order-db
+      DB_NAME: order_db
+      DB_USER: root
+      DB_PASSWORD: root
+    networks:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.order.rule=Host(`order.localhost`)"
+      - "traefik.http.services.order.loadbalancer.server.port=8000"
+
+  # ========================
+  # 🛒 PRODUCT
+  # ========================
+  product-db:
+    image: mysql:8
+    container_name: product-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: product_db
+    volumes:
+      - product_db_data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      timeout: 10s
+      retries: 10
+      interval: 5s
+
+  product-service:
+    build: ./services/product-service
+    container_name: product-service
+    volumes:
+      - ./services/product-service:/app
+    depends_on:
+      product-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: product-db
+      DB_NAME: product_db
+      DB_USER: root
+      DB_PASSWORD: root
+    networks:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.product.rule=Host(`product.localhost`)"
+      - "traefik.http.services.product.loadbalancer.server.port=8000"
+
+  # ========================
+  # 🔔 NOTIFICATION
+  # ========================
+  notification-db:
+    image: mysql:8
+    container_name: notification-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: notification_db
+    volumes:
+      - notification_db_data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      timeout: 10s
+      retries: 10
+      interval: 5s
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: notification-service
+    volumes:
+      - ./services/notification-service:/app
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DB_HOST: notification-db
+      DB_NAME: notification_db
+      DB_USER: root
+      DB_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+    networks:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification.rule=Host(`notification.localhost`)"
+      - "traefik.http.services.notification.loadbalancer.server.port=8000"
+
+  # ========================
+  # 🐰 RABBITMQ
+  # ========================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================
+  # 🎨 FRONTEND
+  # ========================
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      - traefik
+    networks:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`frontend.localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+
+# ========================
+# 🌐 NETWORKS
+# ========================
+networks:
+  backend:
+    driver: bridge
+
+# ========================
+# 💾 VOLUMES
+# ========================
+volumes:
+  auth_db_data:
+  order_db_data:
+  product_db_data:
+  notification_db_data:
+  rabbitmq_data:
