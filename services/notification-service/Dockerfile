@@ -2,11 +2,13 @@
 
 WORKDIR /app
 
-# مهم لـ mysqlclient
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
+    default-mysql-client \
+    netcat-openbsd \
     build-essential \
-    pkg-config
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 

@@ -5,9 +5,9 @@ import time
 CONSUL_HOST = os.getenv("CONSUL_HOST", "consul")
 CONSUL_PORT = 8500
 
-SERVICE_NAME = os.getenv("SERVICE_NAME", "notification-service")
+SERVICE_NAME = os.getenv("SERVICE_NAME", "order-service")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", 8000))
-SERVICE_HOST = os.getenv("SERVICE_HOST", SERVICE_NAME)
+SERVICE_HOST = os.getenv("SERVICE_HOST",SERVICE_NAME)
 
 def register_service():
     url = f"http://{CONSUL_HOST}:{CONSUL_PORT}/v1/agent/service/register"

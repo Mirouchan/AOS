@@ -5,7 +5,7 @@ import time
 CONSUL_HOST = os.getenv("CONSUL_HOST", "consul")
 CONSUL_PORT = 8500
 
-SERVICE_NAME = os.getenv("SERVICE_NAME", "notification-service")
+SERVICE_NAME = os.getenv("SERVICE_NAME", "product-service")
 SERVICE_PORT = int(os.getenv("SERVICE_PORT", 8000))
 SERVICE_HOST = os.getenv("SERVICE_HOST", SERVICE_NAME)
 

@@ -13,9 +13,8 @@ from .serializers import RegisterSerializer
 class UserListView(APIView):
 
     def get(self, request):
-        is_admin = request.headers.get("X-User-Is-Admin")
 
-        if is_admin != "True":
+        if not getattr(request, "is_admin", False):
             return Response({"error": "Forbidden"}, status=403)
 
         users = User.objects.all()
@@ -28,38 +27,31 @@ class UserListView(APIView):
 # =========================
 class UserDetailView(APIView):
 
-    def get_user_context(self, request):
-        return {
-            "user_id": request.headers.get("X-User-Id"),
-            "is_admin": request.headers.get("X-User-Is-Admin") == "True"
-        }
-
     # ---------------------
     # GET USER
     # ---------------------
     def get(self, request, pk):
-        context = self.get_user_context(request)
 
-        if not context["user_id"]:
+        if not request.user_id:
             return Response({"error": "Unauthorized"}, status=401)
 
         user = get_object_or_404(User, pk=pk)
         serializer = RegisterSerializer(user)
         return Response(serializer.data)
 
+
     # ---------------------
     # UPDATE USER
     # ---------------------
     def put(self, request, pk):
-        context = self.get_user_context(request)
 
-        if not context["user_id"]:
+        if not request.user_id:
             return Response({"error": "Unauthorized"}, status=401)
 
         user = get_object_or_404(User, pk=pk)
 
         # 🔐 user himself OR admin
-        if str(user.id) != str(context["user_id"]) and not context["is_admin"]:
+        if str(user.id) != str(request.user_id) and not request.is_admin:
             return Response({"error": "Not allowed"}, status=403)
 
         serializer = RegisterSerializer(user, data=request.data, partial=True)
@@ -70,16 +62,16 @@ class UserDetailView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
     # ---------------------
     # DELETE USER
     # ---------------------
     def delete(self, request, pk):
-        context = self.get_user_context(request)
 
-        if not context["user_id"]:
+        if not request.user_id:
             return Response({"error": "Unauthorized"}, status=401)
 
-        if not context["is_admin"]:
+        if not request.is_admin:
             return Response({"error": "Only admin can delete users"}, status=403)
 
         user = get_object_or_404(User, pk=pk)

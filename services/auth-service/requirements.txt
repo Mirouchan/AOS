@@ -6,3 +6,4 @@ django-cors-headers>=4.0
 django-mysql
 pika>=1.1
 Pillow>=9.0
+requests

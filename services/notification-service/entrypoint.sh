@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# انتظر MySQL
-echo "Waiting for notification-db..."
-while ! mysqladmin ping -h "notification-db" -uroot -proot --silent; do
-    sleep 2
+echo "Waiting for DB..."
+
+until nc -z notification-db 3306; do
+  sleep 2
 done
-echo "notification-db is ready!"
+
+echo "DB ready"
 
 # انتظر RabbitMQ
 echo "Waiting for RabbitMQ..."
@@ -16,6 +17,6 @@ echo "RabbitMQ is ready!"
 
 # نفذ التهاجيرات
 python manage.py migrate
-
+python consul_register.py &
 # ابدأ التطبيق
 python manage.py runserver 0.0.0.0:8000

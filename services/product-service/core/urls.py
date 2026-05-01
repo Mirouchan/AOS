@@ -23,16 +23,17 @@ from rest_framework_simplejwt.views import (
 )
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
 
-def home(request):
-    return HttpResponse("Auth Service is running 🚀")
+def health(request):
+    return JsonResponse({"status": "ok"})
+
 
 urlpatterns = [
-    path('', home),  # ✅ root URL added
-    path('admin/', admin.site.urls),
     path('api/', include('products.urls')),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('admin/', admin.site.urls),
+    path('health/', health), 
+ 
 ]
 # ✅ THIS IS REQUIRED FOR IMAGE DISPLAY IN DEV
 if settings.DEBUG:
